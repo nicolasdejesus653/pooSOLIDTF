@@ -1,0 +1,39 @@
+name: Verifica a Submissão do Exercício
+
+on:
+  pull_request:
+    branches:
+      - main  # Ou sua branch principal
+
+jobs:
+  testar-solucao:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clona o repositório
+        uses: actions/checkout@v3
+
+      - name: Configura o Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instala as dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+
+      - name: Executa o linter com ruff
+        run: |
+          # Executa o ruff no arquivo de submissão, se ele existir
+          if [ -f resolucao/sistema_refatorado.py ]; then
+            ruff check resolucao/sistema_refatorado.py
+          elif [ $(find resolucao -name '*.py' | wc -l) -gt 0 ]; then
+            ruff check $(find resolucao -name '*.py' | head -n 1)
+          else
+            echo "Nenhum arquivo python encontrado no diretório resolucao para o linter."
+            exit 1
+          fi
+
+      - name: Executa o script de validação
+        run: python .github/scripts/test_solution.py
